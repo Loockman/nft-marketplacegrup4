@@ -1,0 +1,86 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+
+contract NFTMarketplace is Ownable {
+    struct Offer {
+        address bidder;
+        uint256 price;
+    }
+
+    struct NFT {
+        uint256 id;
+        address owner;
+        uint256 price;
+    }
+
+    mapping(uint256 => Offer) public tokenOffers;
+    mapping(uint256 => NFT) public nfts;
+    uint256 public nftCount;
+
+ 
+    function createNFT(uint256 initialPrice) external {
+        uint256 tokenId = nftCount++;
+        ERC721._mint(msg.sender, tokenId);
+        nfts[tokenId] = NFT(tokenId, msg.sender, initialPrice);
+    }
+
+    function listToken(uint256 tokenId, uint256 price) external {
+        require(msg.sender == nfts[tokenId].owner, "Only token owner can list");
+        nfts[tokenId].price = price;
+    }
+
+    function buyToken(uint256 tokenId) external payable {
+        require(nfts[tokenId].price > 0, "Token is not for sale");
+        require(msg.value >= nfts[tokenId].price, "Insufficient funds");
+        
+        address payable seller = payable(nfts[tokenId].owner);
+        nfts[tokenId].owner = msg.sender;
+        nfts[tokenId].price = msg.value;
+        
+        seller.transfer(msg.value);
+        
+    }
+
+    function placeOffer(uint256 tokenId) external payable {
+        require(msg.sender != nfts[tokenId].owner, "You cannot place offer on your own token");
+        require(msg.value > 0, "Offer price must be greater than 0");
+        
+        tokenOffers[tokenId] = Offer(msg.sender, msg.value);
+        
+    }
+
+    function withdrawOffer(uint256 tokenId) external {
+        require(tokenOffers[tokenId].bidder == msg.sender, "You cannot withdraw this offer");
+        
+        delete tokenOffers[tokenId];
+    }
+
+    function acceptOffer(uint256 tokenId) external {
+        require(nfts[tokenId].owner == msg.sender, "Only token owner can accept offer");
+        
+        Offer memory offer = tokenOffers[tokenId];
+        require(offer.bidder != address(0), "No offer placed");
+        
+        address payable buyer = payable(offer.bidder);
+        buyer.transfer(offer.price);
+        
+        nfts[tokenId].owner = buyer;
+        nfts[tokenId].price = offer.price;
+        
+        
+        delete tokenOffers[tokenId];
+    }
+}
+
+contract NFTFactory is Ownable {
+
+    function createNFT() external {
+        uint256 tokenId = totalSupply() + 1;
+        _mint(msg.sender, tokenId);
+        
+    }
+}
