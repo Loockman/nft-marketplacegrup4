@@ -104,7 +104,8 @@ contract NFTMarketplace is Ownable, ERC721URIStorage, ReentrancyGuard {
 
 contract NFTFactory is Ownable {
 
-    function createNFT() external {
-        // Implementation of NFT creation
-    }
+    function createNFT(address _nftMarketplace, uint _initialPrice, string memory _tokenURI) external onlyOwner {
+    NFTMarketplace nftMarketplace = NFTMarketplace(_nftMarketplace);
+    nftMarketplace.createNFT(_initialPrice, _tokenURI);
+}
 }
