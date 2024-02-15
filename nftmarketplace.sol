@@ -28,11 +28,11 @@ contract NFTMarketplace is Ownable, ERC721URIStorage, ReentrancyGuard {
     uint public highestBid;
     mapping(address => uint) public totalBids;
 
-    constructor(address _nft, uint _nftId, uint _startingPrice) ERC721("NFTMarketplace", "NFTM") {
-        nft = IERC721(_nft);
-        nftId = _nftId;
+    constructor()Ownable(msg.sender)  ERC721("NFTMarketplace", "NFTM") {
+        // nft = IERC721(_nft);
+        // nftId = _nftId;
         seller = payable(msg.sender);
-        highestBid = _startingPrice;
+        // highestBid = _startingPrice;
     } 
 
     function createNFT(uint256 initialPrice, string memory tokenURI) external {
@@ -102,10 +102,3 @@ contract NFTMarketplace is Ownable, ERC721URIStorage, ReentrancyGuard {
     event End(address highestBidder, uint amount);
 }
 
-contract NFTFactory is Ownable {
-
-    function createNFT(address _nftMarketplace, uint _initialPrice, string memory _tokenURI) external onlyOwner {
-    NFTMarketplace nftMarketplace = NFTMarketplace(_nftMarketplace);
-    nftMarketplace.createNFT(_initialPrice, _tokenURI);
-}
-}
